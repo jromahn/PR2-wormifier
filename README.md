@@ -30,4 +30,15 @@
 - 14_Treemaps_db_results.R
 - 15_DB_Stats.R
 
+## Metadata:
+
+| Taxonomy | |
+| ------------- | ------------- |
+| 1 | WoRMS, AphiaID in PR2 |
+| 2 | WoRMS, without AphiaID in PR2, but a sequence of the same genus has|
+| 3 | WoRMS, without AphiaID of any sequence of that genus in PR |
+| 4 | WoRMS, without AphiaID and non unique genus name|
+| 5 | WoRMS, not 1-4|
+| 6 | Algaebase |
+
 ## References
