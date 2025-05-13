@@ -4,7 +4,56 @@
 
 ## Input
 
+As Species List the pipeline needs a comma-separated table with the columns: "genus","species","taxon".
+The taxon column is important to control if the downloaded and found species really belongs to the same taxonomic group, which is essential to check due to non-unique genus names. The taxonomic group added to the column should fit WoRMS taxonomy. If you prefer to not define the taxonomy, write NA.
+
+As example file check: Formated_species_list.csv 
+This is a species list for the Baltic Sea and was used to create the reference database.
+
 ## Dependencies
+
+To run the pipeline, you need to have access to Algaebase. For this write a line to:
+
+The pipeline is tested for the following versions: 
+
+```
+# dependencies for pr2database:
+# install.packages("devtools")
+# install.packages("BiocManager")
+# BiocManager::install("Biostrings")
+#devtools::install_github("pr2database/pr2database")
+```
+
+```
+require(tidyverse)
+require(tibble)
+require(stringr)
+require(stringi) # try next time without
+require(readxl)
+
+#databases and taxonomy
+require(worrms)
+require(pr2database)
+require(taxonomizr)
+
+
+#fasta file handling
+require(phylotools)
+
+# extract from the internet
+library(jsonlite)
+library(curl)
+require(utils)
+require(rentrez)
+
+# for plots
+require(gapminder)
+require(treemapify)
+require(ggpubr)
+
+
+```
+
 
 ## Scripts
 
