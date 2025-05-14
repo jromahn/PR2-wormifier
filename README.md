@@ -10,26 +10,37 @@ The taxon column is important to control if the downloaded and found species rea
 As example file check: Formated_species_list.csv 
 This is a species list for the Baltic Sea and was used to create the reference database.
 
+IMPORTANT:
+
+You need to have access to Algaebase database to run the script, you need an API key which you can request with the help of the following homepage: [Algaebase API link](https://www.algaebase.org/api/)
+The key, the email address for NCBI requests and the filename and path of the species list can be saved in ```00_login_data.ini```. Therefore, adaption of the signle R scripts are not neceassary.
+
 ## Dependencies
 
 To run the pipeline, you need to have access to Algaebase. For this write a line to:
 
 The pipeline is tested for the following versions: 
 
+
+How to install all packages
 ```
+options(repos = c(CRAN = "https://cloud.r-project.org/"))
 # dependencies for pr2database:
-# install.packages("devtools")
-# install.packages("BiocManager")
-# BiocManager::install("Biostrings")
-#devtools::install_github("pr2database/pr2database")
-```
+ install.packages("devtools")
+ install.packages("BiocManager")
+ BiocManager::install("Biostrings")
+devtools::install_github("pr2database/pr2database")
+
+#the rest
+instal.packages(c("tidyverse","readxl","stringi","ini","worrms","taxonomizr","phylotools","jsonlite","curl","utils","rentrez","gapminder","treemapify","ggpubr"))
 
 ```
+Essential R packages: 
+```
 require(tidyverse)
-require(tibble)
-require(stringr)
 require(stringi) # try next time without
 require(readxl)
+require(ini)
 
 #databases and taxonomy
 require(worrms)
