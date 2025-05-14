@@ -2,6 +2,8 @@
 
 ## Introduction
 
+
+![Graphical overview of the pipeline](PR2-wormifier.png)
 ## Input
 
 As Species List the pipeline needs a comma-separated table with the columns: "genus","species","taxon".
