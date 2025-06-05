@@ -1,12 +1,23 @@
 # PR2-wormifier
 
-
-The manuscript of this pipeline will be soon submitted to Molecular Ecology Resources.
+The manuscript of this pipeline will be soon submitted to Molecular Ecology Resources. For a detailed information please check the manuscript, will be linked as soon as possible.
 
 ## Introduction
+THe PR2-wormifier builds a customized, curated 18S reference database by combining sequences from PR² and NCBI with validated taxonomy from WoRMS and AlgaeBase. It filters out low-quality or non-nuclear sequences and standardizes species names and metadata. The result is a more comprehensive database that improves taxonomic resolution in metabarcoding studies.
 
+it consists out of 10 scripts, 9 written in R and 1 written in Python
 
-![Graphical overview of the pipeline](PR2-wormifier.png)
+![ObiMAGIC pipeline overview](PR2-wormifier.png)
+
+## Overview
+
+[Input](#Input)  
+[Dependencies](#Dependencies)   
+[Pipeline Scripts](#Pipeline-Scripts)  
+[01_Clean_PR2.R](#01_Clean_PR2.R)  
+[Metadata](#Metadata)  
+[References](#References)  
+
 ## Input
 
 As Species List the pipeline needs a comma-separated table with the columns: "genus","species","taxon".
@@ -190,7 +201,7 @@ Input:
 Output:
 
 
-## Metadata:
+## Metadata
 
 | Taxonomy | |
 | ------------- | ------------- |
