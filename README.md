@@ -178,10 +178,11 @@ Function: Produces the final fasta file with only taxonomically validated nuclea
 Input:
 Output:
 
-##  Scripts Associated with Benchmarking in folder: 13_Benchmark_Script
+##  Scripts Associated with Benchmarking
+
+These are located in 13_Benchmark_Script and should be executed from the parent directory of `13_Benchmark_Script`, meaning `PATH/TO/FOLDER`, not from within `PATH/TO/FOLDER/13_Benchmark_Script`.
 
 To execute in the following order:
-The scripts are written, that they are executed from the path of their location.
 
 - 11_Create_Database_Versions.R
 - 12_Convert_header_Crabs_part1.R
