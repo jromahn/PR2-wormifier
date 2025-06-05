@@ -23,7 +23,7 @@ it consists out of 10 scripts, 9 written in R and 1 written in Python
 As Species List the pipeline needs a comma-separated table with the columns: "genus","species","taxon".
 The taxon column is important to control if the downloaded and found species really belongs to the same taxonomic group, which is essential to check due to non-unique genus names. The taxonomic group added to the column should fit WoRMS taxonomy. If you prefer to not define the taxonomy, write NA.
 
-As example file check: Formated_species_list.csv 
+As example file check: `Formated_species_list.csv`
 This is a species list for the Baltic Sea and was used to create the reference database.
 
 For benchmarking a sedaDNA metabarcoding dataset was used. It is available under the following DOI in FigShare: [10.6084/m9.figshare.28457489](https://doi.org/10.6084/m9.figshare.28457489)
@@ -91,6 +91,11 @@ install.packages(c("tidyverse","stringi","ini","worrms","taxonomizr","phylotools
 
 ## Pipeline Scripts
 
+Part of all scripts is that the environment is saved, which allow easy repetition of the scripts. The numbers of the output refer always to the script which created them.
+
+E.g. `2.9_F_species_FINAL_withAlgaebase.csv` is an output file of the script `02_Clean_Input.R`.
+
+Pipeline Scripts:
 - 00_Function_Library.R
 - 01_Clean_PR2.R
 - 02_Clean_Input.R
@@ -105,78 +110,141 @@ install.packages(c("tidyverse","stringi","ini","worrms","taxonomizr","phylotools
 
 ### 00_Function_Library.R
 
-Function: 
-Input:
-Output:
+Function: R script containing all functions and also filter options
 
 ### 01_Clean_PR2.R
 
 Function: Filters the PR² reference database to retain only nuclear 18S sequences identified to genus or species level, removing organelle-derived and low-resolution entries.
+
 Input:
+- 00_login_data.ini
+
 Output:
+- 1.12_F_Cleaned_pr2_database_wAlgbase.tsv
+- 1.12_F_Cleaned_pr2_database_wAlgbase
 
 ### 02_Clean_Input.R
 
 Function: Prepares and formats the user-provided species list to ensure compatibility with the cleaned PR² reference database.
-Input:
-Output:
 
+Input:
+- 00_login_data.ini
+- Formated_species_list.csv
+  
+Output:
+- 2.4_F_species_FINAL.csv # includes only WoRMS results 
+- 2.8_F_Algaebase_specieslist.csv  # includes only Algaebase results 
+- 2.9_F_species_FINAL_withAlgaebase.csv
 
 ### 03_Download_from_PR2.R
 
 Function: Searches the cleaned PR² database for user-specified species and related taxa, downloads matching sequences, and generates a detailed metadata file including taxonomic and sequence information.
+
 Input:
+- 1.12_F_Cleaned_pr2_database_wAlgbase.tsv
+- 2.9_F_species_FINAL_withAlgaebase.csv
+
 Output:
+- 3.1_F_Overview_Species.cs
+- PR2_Sequences/Search/SEQUENCES.fasta
 
 
 ### 04_Identify_missing_species.R
 
 Function: Compares the user's species list with downloaded PR² data to identify missing species and prepare input for NCBI searches.
+
 Input:
+- 2.9_F_species_FINAL_withAlgaebase.csv
+- 3.1_F_Overview_Species.csv
+
 Output:
+- 4.1_Missing_Species.csv
+- 4.2_Present_Species.csv
 
 
 ### 05_Check_NCBI.py
 
-Function:  Searches NCBI for nuclear 18S sequences of missing or related species, filters results, and downloads relevant sequences.
+Function:  Searches NCBI for nuclear 18S sequences of missing or related species, filters results, and downloads relevant sequences. The created folder and metadata will contain the data when the downloading was started.
+
 Input:
+- 4.1_Missing_Species.csv
+- 4.2_Present_Species.csv
+  
 Output:
+- 4.2_Present_Species_completed_withNCBI.csv
+- 02_NCBI_${DATE}/SEQUENCES.fasta
+- 02_NCBI_${DATE_results/
 
 
 ### 06_Clean_Sort_NCBI_Downloads.R
 
 Function: Cleans and filters downloaded NCBI sequences, removing duplicates and non-nuclear 18S entries, and standardizes metadata.
+
 Input:
+- 05_Missing_PR2_Downloaded_species_NCBI_info__${DATE}.tsv
+- 1.12_F_Cleaned_pr2_database_wAlgbase
+- 2.9_F_species_FINAL_withAlgaebase.csv
+- 4.1_Missing_Species.csv
+
 Output:
-
-
+- 6.3_Species_NCBI.csv
 
 ### 07_Download_Rest_PR2.R
 
 Function:  Downloads any remaining PR² sequences not yet retrieved, ensuring database completeness.
-Input:
-Output:
 
+Input:
+- 1.12_F_Cleaned_pr2_database_wAlgbase.tsv
+- 3.1_F_Overview_Species.csv
+  
+Output:
+- 7.1_Overview_PR2_Rest.csv
+- PR2_Sequences/Rest/SEQUENCES.fasta
 
 ### 08_Combine_Sort_Files.R
 
 Function: Merges cleaned NCBI and PR² sequences, assigns metadata, and organizes files to avoid duplication.
+
 Input:
+- 3.1_F_Overview_Species.csv
+- 6.3_Species_NCBI.csv
+- 7.1_Overview_PR2_Rest.csv
+- 
 Output:
+- PR2_Sequences/NCBI/SEQUENCES.fasta
+- 8.1_Overview_Sequences_ALL.csv
 
 
 ### 09_Taxonomy.R
 
 Function: Assigns a standardized nine-level WoRMS taxonomy to all sequences, resolving ambiguities and excluding entries without valid taxonomy.
+
 Input:
+- 00_login_data.ini
+- 1.7_F_Cleanded_pr2_taxonomy.tsv
+- 8.1_Overview_Sequences_ALL.csv
+
 Output:
+- PR2_metadata_Algaebase.csv
+- 9.5_Taxonomy_FINAL.tax
+- 9.5_Taxonomy_FINAL2.tax
+- 9.6_Overview_Sequences_FINAL.csv
 
 
 ### 10_Sort_Fasta.R
 
 Function: Produces the final fasta file with only taxonomically validated nuclear 18S reference sequences.
+
 Input:
+- 9.5_Taxonomy_FINAL2.tax
+- 9.6_Overview_Sequences_FINAL.csv
+
 Output:
+- 10.1_Sequences_FINAL.fasta
+- 10.2_Taxonomy_FINAL_detail.tax
+- 10.2_Taxonomy_FINAL.tax
+- 10.3__Overview_species_lacking_taxonomy.csv
+- 10.4__Overview_species_lacking_taxonomy_detailed.csv
 
 ##  Scripts Associated with Benchmarking
 
@@ -199,6 +267,7 @@ To execute in the following order:
 
 ## Metadata
 
+Explanation for the different taxanomy assignment strategies:
 | Taxonomy | |
 | ------------- | ------------- |
 | 1 | WoRMS, AphiaID in PR2 |
