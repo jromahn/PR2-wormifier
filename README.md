@@ -173,7 +173,7 @@ Input:
 Output:
 - 4.2_Present_Species_completed_withNCBI.csv
 - 02_NCBI_${DATE}/SEQUENCES.fasta
-- 02_NCBI_${DATE_results/
+- 02_NCBI_${DATE}_results/
 
 
 ### 06_Clean_Sort_NCBI_Downloads.R
