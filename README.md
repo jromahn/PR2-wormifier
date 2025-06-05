@@ -14,7 +14,7 @@ it consists out of 10 scripts, 9 written in R and 1 written in Python
 [Input](#Input)  
 [Dependencies](#Dependencies)   
 [Pipeline Scripts](#Pipeline-Scripts)  
-[01_Clean_PR2.R](#01_Clean_PR2.R)  
+[Scripts Associated with Benchmarking in folder: 13_Benchmark_Script](#Scripts-Associated-with-Benchmarking-in-folder:-13-Benchmark_Script)
 [Metadata](#Metadata)  
 [References](#References)  
 
@@ -103,28 +103,6 @@ install.packages(c("tidyverse","stringi","ini","worrms","taxonomizr","phylotools
 - 09_Taxonomy.R
 - 10_Sort_Fasta.R
 
-
-##  Scripts Associated with Benchmarking in folder: 00_Analysis
-
-To execute in the following order:
-The scripts are written, that they are executed from the path of their location.
-
-- 11_Create_Database_Versions.R
-- 12_Convert_header_Crabs_part1.R
-- 12_Run_CRABS_DB.sh
-- 12_Convert_header_Crabs_part2.R
-- 13_combine_mothur.sh
-- 13_README_mothur.txt
-- 13_Assignment_Stats_Crabs.R
-- 14_Treemaps_db_results.R
-- 15_DB_Stats.R
-
-  Community files were splitted and concatinated after mothur assignment due to RAM issues.
-
-## Detailed overview of the pipeline scripts
-
-For a detailed overview of the function of the script is included in the manuscript, here a overview of the general fnction, the input and the output is provided.
-
 ### 00_Function_Library.R
 
 Function: 
@@ -199,6 +177,23 @@ Output:
 Function: Produces the final fasta file with only taxonomically validated nuclear 18S reference sequences.
 Input:
 Output:
+
+##  Scripts Associated with Benchmarking in folder: 13_Benchmark_Script
+
+To execute in the following order:
+The scripts are written, that they are executed from the path of their location.
+
+- 11_Create_Database_Versions.R
+- 12_Convert_header_Crabs_part1.R
+- 12_Run_CRABS_DB.sh
+- 12_Convert_header_Crabs_part2.R
+- 13_combine_mothur.sh
+- 13_README_mothur.txt
+- 13_Assignment_Stats_Crabs.R
+- 14_Treemaps_db_results.R
+- 15_DB_Stats.R
+
+  Community files were splitted and concatinated after mothur assignment due to RAM issues.
 
 
 ## Metadata
