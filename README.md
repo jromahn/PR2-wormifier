@@ -91,7 +91,7 @@ install.packages(c("tidyverse","stringi","ini","worrms","taxonomizr","phylotools
 
 ## Pipeline Scripts
 
-Part of all scripts is that the environment is saved, which allow easy repetition of the scripts. The numbers of the output refer always to the script which created them.
+Part of all scripts is that the environment is saved, which allow easy repetition of the scripts. The numbers of the output refer always to the script which created them. Next to the folders in which the sequences will be saved, three folders will be created: 1.) workspace 2.) intermediate results (Script 1-8) 3.) final results (9-10).
 
 E.g. `2.9_F_species_FINAL_withAlgaebase.csv` is an output file of the script `02_Clean_Input.R`.
 
