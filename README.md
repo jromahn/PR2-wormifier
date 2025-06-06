@@ -14,7 +14,7 @@ it consists out of 10 scripts, 9 written in R and 1 written in Python
 [Input](#Input)  
 [Dependencies](#Dependencies)   
 [Pipeline Scripts](#Pipeline-Scripts)  
-[Scripts Associated with Benchmarking in folder: 13_Benchmark_Script](#Scripts-Associated-with-Benchmarking-in-folder:-13-Benchmark_Script)
+[Scripts Associated with Benchmarking](#Scripts-Associated-with-Benchmarking)
 [Metadata](#Metadata)  
 [References](#References)  
 
@@ -23,10 +23,22 @@ it consists out of 10 scripts, 9 written in R and 1 written in Python
 As Species List the pipeline needs a comma-separated table with the columns: "genus","species","taxon".
 The taxon column is important to control if the downloaded and found species really belongs to the same taxonomic group, which is essential to check due to non-unique genus names. The taxonomic group added to the column should fit WoRMS taxonomy. If you prefer to not define the taxonomy, write NA.
 
+
+
 As example file check: `Formated_species_list.csv`
 This is a species list for the Baltic Sea and was used to create the reference database.
 
-For benchmarking a sedaDNA metabarcoding dataset was used. It is available under the following DOI in FigShare: [10.6084/m9.figshare.28457489](https://doi.org/10.6084/m9.figshare.28457489)
+For benchmarking a sedaDNA metabarcoding dataset was used. It is available under the following DOI in FigShare: 
+
+Input Data Overview: 
+
+| File type  | File name | Location |
+| ------------- | ------------- | ------------- |
+| Species list | Formated_species_list.csv |  00_input_data |
+| Cleaned community matrix | Supplementary_Table_5_CommunityMatrix_Cleaned.csv  |  [10.6084/m9.figshare.28457489](https://doi.org/10.6084/m9.figshare.28457489) |
+| Uncleaned community counttable | 8_PhytoArk_Euka02_2024_final_community_MUC__mothur_counttable.tsv | [10.6084/m9.figshare.29254598.v1](https://doi.org/10.6084/m9.figshare.29254598.v1)  |
+| Amplicon fasta file | 8_PhytoArk_Euka02_2024_final_community_MUC__mothur_sequences.fasta | [10.6084/m9.figshare.28457495](https://doi.org/10.6084/m9.figshare.28457495) |
+
 
 IMPORTANT:
 
@@ -253,7 +265,7 @@ These are located in 13_Benchmark_Script and should be executed from the parent 
 To execute in the following order:
 
 - 11_Create_Database_Versions.R
-- 12_Convert_header_Crabs_part1.R
+- 12_Convert_header_Crabs_part1.R 
 - 12_Run_CRABS_DB.sh
 - 12_Convert_header_Crabs_part2.R
 - 13_combine_mothur.sh
@@ -263,6 +275,10 @@ To execute in the following order:
 - 15_DB_Stats.R
 
   Community files were splitted and concatinated after mothur assignment due to RAM issues.
+  The `12_Convert_header_Crabs_part*` script are only neceassary for the fasta files created with `11_Create_Database_Versions.R` due to encoding problems. The `10.1_Sequences_FINAL.fasta` needs no reformatiing to be able to run it with `CRABS`.
+
+For mothru assignments no " are allowed in the count table. 
+
 
 
 ## Metadata
