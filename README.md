@@ -277,7 +277,7 @@ To execute in the following order:
   Community files were splitted and concatinated after mothur assignment due to RAM issues.
   The `12_Convert_header_Crabs_part*` script are only neceassary for the fasta files created with `11_Create_Database_Versions.R` due to encoding problems. The `10.1_Sequences_FINAL.fasta` needs no reformatiing to be able to run it with `CRABS`.
 
-For mothru assignments no " are allowed in the count table. 
+For mothur assignments no " are allowed in the count table. 
 
 
 
