@@ -5,7 +5,7 @@ The manuscript of this pipeline will be soon submitted to Molecular Ecology Reso
 ## Introduction
 THe PR2-wormifier builds a customized, curated 18S reference database by combining sequences from PR² and NCBI with validated taxonomy from WoRMS and AlgaeBase. It filters out low-quality or non-nuclear sequences and standardizes species names and metadata. The result is a more comprehensive database that improves taxonomic resolution in metabarcoding studies.
 
-it consists out of 10 scripts, 9 written in R and 1 written in Python
+It consists out of 10 scripts, 9 written in R and 1 written in Python
 
 ![ObiMAGIC pipeline overview](PR2-wormifier.png)
 
@@ -294,3 +294,28 @@ Explanation for the different taxanomy assignment strategies:
 | 6 | Algaebase |
 
 ## References
+
+Bryan, J. (2023). gapminder: Data from Gapminder. https://CRAN.R-project.org/package=gapminder 
+Chamberlain, S., & Vanhoorne, B. (2023). worrms: World Register of Marine Species (WoRMS) Client. https://doi.org/10.32614/CRAN.package.worrms 
+Cock, P. J. A., Antao, T., Chang, J. T., Chapman, B. A., Cox, C. J., Dalke, A., Friedberg, I., Hamelryck, T., Kauff, F., Wilczynski, B., & De Hoon, M. J. L. (2009). Biopython: Freely available Python tools for computational molecular biology and bioinformatics. Bioinformatics, 25(11), 1422–1423. https://doi.org/10.1093/bioinformatics/btp163 
+Cooley, D. (2022). jsonify: Convert Between „R“ Objects and Javascript Object Notation (JSON). https://CRAN.R-project.org/package=jsonify 
+Gagolewski, M. (2022). stringi: Fast and portable character string processing in R. Journal of Statistical Software, 103(2), 1–59. https://doi.org/10.18637/jss.v103.i02 
+Guillou, L., Bachar, D., Audic, S., Bass, D., Berney, C., Bittner, L., Boutte, C., Burgaud, G., de Vargas, C., Decelle, J., del Campo, J., Dolan, J. R., Dunthorn, M., Edvardsen, B., Holzmann, M., Kooistra, W. H. C. F., Lara, E., Le Bescot, N., Logares, R., … Christen, R. (2013). The Protist Ribosomal Reference database (PR2): A catalog of unicellular eukaryote Small Sub-Unit rRNA sequences with curated taxonomy. Nucleic Acids Research, 41(D1), Article D1. https://doi.org/10.1093/nar/gks1160 
+Guiry, M. D., & Guiry, G. M. (2023). AlgaeBase [World-wide electronic publication, National University of Ireland, Galway]. AlgaeBase. https://www.algaebase.org; 
+HELCOM. (2004). HELCOM Checklist of Baltic Sea Phytoplankton Species (No. 95; Baltic Sea Environment Proceedings). Helsinki Commission. https://helcom.fi/wp-content/uploads/2019/10/BSEP95.pdf 
+HELCOM. (2020). HELCOM Checklist 2.0 of Baltic Sea Macrospecies (No. 174; Baltic Sea Environment Proceedings). Helsinki Commission. https://helcom.fi/wp-content/uploads/2020/12/BSEP174.pdf 
+Henderson, E. (2024). ghibli: Studio Ghibli Colour Palettes. https://CRAN.R-project.org/package=ghibli 
+Kassambara, A. (2023). ggpubr: „ggplot2“ Based Publication Ready Plots. https://CRAN.R-project.org/package=ggpubr 
+Müller, K., & Wickham, H. (2023). tibble: Simple Data Frames. https://CRAN.R-project.org/package=tibble 
+Oksanen, J., Simpson, G. L., Blanchet, F. G., Kindt, R., Legendre, P., Minchin, P. R., O’Hara, R. B., Solymos, P., Stevens, M. H. H., Szoecs, E., Wagner, H., Barbour, M., Bedward, M., Bolker, B., Borcard, D., Carvalho, G., Chirico, M., Caceres, M. D., Durand, S., … Weedon, J. (2024). vegan: Community Ecology Package (Version 2.6-6.1) [Software]. https://cran.r-project.org/web/packages/vegan/index.html 
+Ooms, J. (2025). curl: A Modern and Flexible Web Client for R. https://doi.org/10.32614/CRAN.package.curl 
+Pagès, H., Aboyoun, P., Gentleman, R., & DebRoy, S. (2025). Biostrings: Efficient manipulation of biological strings. https://doi.org/10.18129/B9.bioc.Biostrings 
+Sherrill-Mix, S. (2025). taxonomizr: Functions to Work with NCBI Accessions and Taxonomy. https://doi.org/10.32614/CRAN.package.taxonomizr 
+Vaulot, D. (2025). pr2database: PR2 database with shiny web interface. https://github.com/pr2database/pr2database 
+Wickham, H. (2023). stringr: Simple, Consistent Wrappers for Common String Operations. https://doi.org/10.32614/CRAN.package.stringr 
+Wickham, H., François, R., Henry, L., Müller, K., & Vaughan, D. (2023). dplyr: A Grammar of Data Manipulation. https://doi.org/10.32614/CRAN.package.dplyr 
+Wickham, H., Vaughan, D., & Girlich, M. (2024). tidyr: Tidy Messy Data. https://doi.org/10.32614/CRAN.package.tidyr 
+Wilkins, D. (2023). treemapify: Draw Treemaps in „ggplot2“. https://CRAN.R-project.org/package=treemapify 
+Winter, D. J. (2017). rentrez: An R package for the NCBI eUtils API. The R Journal, 9(2), 520–526. 
+Zhang, J. (2017). phylotools: Phylogenetic Tools for Eco-Phylogenetics. https://doi.org/10.32614/CRAN.package.phylotools 
+
