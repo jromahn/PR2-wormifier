@@ -302,3 +302,26 @@ Explanation for the different taxanomy assignment strategies:
 | 6 | Algaebase |
 
 ## References
+- Brand, T. van den. (2025a). ggh4x: Hacks for „ggplot2“. https://doi.org/10.32614/CRAN.package.ggh4x 
+- Brand, T. van den. (2025b). legendry: Extended Legends and Axes for „ggplot2“. https://doi.org/10.32614/CRAN.package.legendry 
+- Bryan, J. (2023). gapminder: Data from Gapminder. https://CRAN.R-project.org/package=gapminder 
+- Chamberlain, S., & Vanhoorne, B. (2023). worrms: World Register of Marine Species (WoRMS) Client. https://doi.org/10.32614/CRAN.package.worrms 
+- Charif, D., & Lobry, J. R. (2007). SeqinR 1.0-2: A contributed package to the R project for statistical computing devoted to biological sequences retrieval and analysis. In U. Bastolla, M. Porto, H. E. Roman, & M. Vendruscolo (Hrsg.), Structural approaches to sequence evolution: Molecules, networks, populations (S. 207–232). Springer Verlag. 
+- Cooley, D. (2022). jsonify: Convert Between „R“ Objects and Javascript Object Notation (JSON). https://CRAN.R-project.org/package=jsonify 
+- Gagolewski, M. (2022). stringi: Fast and portable character string processing in R. Journal of Statistical Software, 103(2), 1–59. https://doi.org/10.18637/jss.v103.i02 
+- Henderson, E. (2024). ghibli: Studio Ghibli Colour Palettes. https://CRAN.R-project.org/package=ghibli 
+- Kassambara, A. (2023). ggpubr: „ggplot2“ Based Publication Ready Plots. https://CRAN.R-project.org/package=ggpubr 
+- Müller, K., & Wickham, H. (2023). tibble: Simple Data Frames. https://CRAN.R-project.org/package=tibble 
+- Ooms, J. (2025). curl: A Modern and Flexible Web Client for R. https://doi.org/10.32614/CRAN.package.curl 
+- Pagès, H., Aboyoun, P., Gentleman, R., & DebRoy, S. (2025). Biostrings: Efficient manipulation of biological strings. https://doi.org/10.18129/B9.bioc.Biostrings 
+- Schauberger, P., & Walker, A. (2025). openxlsx: Read, Write and Edit xlsx Files. https://doi.org/10.32614/CRAN.package.openxlsx 
+- Sherrill-Mix, S. (2025). taxonomizr: Functions to Work with NCBI Accessions and Taxonomy. https://doi.org/10.32614/CRAN.package.taxonomizr 
+- Vaulot, D. (2026). pr2database: PR2 database with shiny web interface. https://github.com/pr2database/pr2database 
+- Wickham, H. (2011). The Split-Apply-Combine Strategy for Data Analysis. Journal of Statistical Software, 40(1), 1–29. 
+- Wickham, H. (2025). stringr: Simple, Consistent Wrappers for Common String Operations. https://doi.org/10.32614/CRAN.package.stringr 
+- Wickham, H., François, R., Henry, L., Müller, K., & Vaughan, D. (2023). dplyr: A Grammar of Data Manipulation. https://doi.org/10.32614/CRAN.package.dplyr 
+- Wickham, H., & Henry, L. (2026). purrr: Functional Programming Tools. https://doi.org/10.32614/CRAN.package.purrr 
+- Wickham, H., Vaughan, D., & Girlich, M. (2024). tidyr: Tidy Messy Data. https://doi.org/10.32614/CRAN.package.tidyr 
+- Wilkins, D. (2023). treemapify: Draw Treemaps in „ggplot2“. https://CRAN.R-project.org/package=treemapify 
+- Winter, D. J. (2017). rentrez: An R package for the NCBI eUtils API. The R Journal, 9(2), 520–526. 
+- Zhang, J. (2024). phylotools: Phylogenetic Tools for Eco-Phylogenetics. https://github.com/helixcn/phylotools 
