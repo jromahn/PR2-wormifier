@@ -9,7 +9,7 @@ install.packages("stringi")
 install.packages("stringr")
 install.packages("tidyr")
 install.packages("dplyr")
-
+install.packages("plyr")
 
 ## install blaster from archive (dependency for pr2database) since it is not supported anymore
 url <- "https://cran.r-project.org/src/contrib/Archive/blaster/blaster_1.0.7.tar.gz"
@@ -19,6 +19,11 @@ install.packages(pkgs=pkgFile, type="source", repos=NULL)
 file.remove(pkgFile)
 
 devtools::install_github("pr2database/pr2database")
+
+## for sequence handling
+install.packages("seqinr")
+install.packages("phylotools")
+install.packages("Biostrings")
 
 ## for downloading from algaebase
 install.packages("jsonlite")
