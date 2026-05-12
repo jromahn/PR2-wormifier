@@ -1,12 +1,6 @@
 
 rm(list=ls())
 #setwd("/PATH/TO/11_Benchmark_Scripts") # to path above the Script folder NOT including it
-source("00_Function_Library.R") # read file with functions
-read_simple_ini("00_login_data.ini")
-####################
-## Aim: Pre-cleaning of pr2 database
-##
-######################
 
 require(utils)
 require(pr2database)
@@ -17,28 +11,44 @@ require(stringr)# try next time without
 require(stringi) # try next time without
 library(jsonlite)
 library(curl)
-#require(purrr)
+
+setwd("/Users/jromahn/Documents/XX_PAPERS/2025sub_stefanie_wormifier/PR2-wormifier_april26")
+source("00_Function_Library.R") # read file with functions
+read_simple_ini("00_login_data.ini")
+
+################################################################################
+## Aim: Pre-cleaning of pr2 database
+## Function: Filters the PR² reference database to retain only nuclear 18S sequences identified to genus or species level, removing organelle-derived and low-resolution entries.
+######
+# 1.) Taxonomy Cleaning
+# 2.) Download WoRMS ID
+# 3.) WoRMS result processing
+# 4.) Sequence database update based on WoRMS results
+# 5.) Algaebase cross-check
+##################################################################################
+
 
 ####################################
 # data storage
-output_path <- "01_intermediate_results" # results of a script
-workspace_path <- "00_workspace"
+output_path <- file.path(path_to_output, "01_intermediate_results2") # results of a script
+workspace_path <- file.path(path_to_output,"00_workspace2")
 
 
-path_creation(c(workspace_path, output_path))
-####################################
+path_creation(c(path_to_output,workspace_path, output_path))
+#################################### 
 
 
-#Import Pr2-database and Pr2-taxonomy
+#Import Pr2-database and Pr2-taxonomy ────────────────────────────────────────────────────────────────
 pr2 <- pr2_database()
 pr2_tax <- pr2_taxonomy()
 
 
 ######
-sink("1.9_F_Overview_and_statistics.txt")
+workdir <- getwd()
+sink(file.path(workdir,"1.9_F_Overview_and_statistics.txt"))
 print(paste("Downloaded pr2_database & taxonomy:", format(Sys.time(), "%a %b %d %X %Y")))
 sink()
-unlink("1.9_F_Overview_and_statistics.txt")
+#unlink("1.9_F_Overview_and_statistics.txt")
 ######
 
 ## Taxonomy ##
@@ -49,66 +59,80 @@ if (! "worms_id" %in% names(pr2_tax)) {
 }
 
 
-#Clean taxonomy
+#Clean taxonomy: Remove sequences from cell organelles, etc. ────────────────────────────────────────────────────────────────
 pr2_tax_A <- clean_pr2_taxonomy(pr2_tax) 
+
+# how many of the 18S sequences have unknown families despite known genera ────────────────────────────────────────────────────────────────
+ciliates <- pr2_tax_A %>% filter(subdivision=="Ciliophora")
+ciliates_unknown <- pr2_tax_A %>% filter(subdivision=="Ciliophora") %>% filter(grepl("_X", family) & !grepl("_X", genus)) 
+nrow(ciliates_unknown)/nrow(ciliates)*100
+nrow(ciliates_unknown)
+
+dinos <- pr2_tax_A %>% filter(class=="Dinophyceae")
+dinos_unknown <- pr2_tax_A %>% filter(class=="Dinophyceae") %>% filter(grepl("_X", family) & !grepl("_X", genus)) 
+nrow(dinos_unknown)/nrow(dinos)*100
+nrow(dinos_unknown)
+
 #colnames(pr2_tax)
 #colnames(pr2)
 #quit()
 #############################################################################
 
-#Create columns for accepted names and corresponding AphiaIDs
+#Create columns for accepted names and corresponding AphiaIDs ────────────────────────────────────────────────────────────────
 pr2_tax_B <- pr2_tax_A %>%
   mutate(Acc_Name = NA) %>%
   mutate(Acc_Aphia = NA)
 
-print("Start pr2_tax_C")
-#Get accepted name and AphiaID where AphiaID is already known
+
+#Get accepted name and AphiaID where AphiaID is already known ────────────────────────────────────────────────────────────────
+
+print("Start pr2_tax_C:this can take long")
 pr2_tax_C <- pr2_tax_B %>%
-  filter(!is.na(worms_id)) %>%
+  filter(!is.na(worms_id)) %>% 
   rowwise() %>%
-  mutate(Acc_Name = wm_record(worms_id)$valid_name ) %>%
-  mutate(Acc_Aphia = wm_record(worms_id)$valid_AphiaID) %>%
-  rbind(pr2_tax_B %>% filter(is.na(worms_id)))
+  mutate(
+    record    = list(tryCatch(wm_record(worms_id), error = function(e) NULL)),
+    Acc_Name  = if (!is.null(record)) record$valid_name else NA_character_,
+    Acc_Aphia = if (!is.null(record)) record$valid_AphiaID else NA_integer_ ) %>%
+  select(-record) %>%
+  bind_rows(pr2_tax_B %>% filter(is.na(worms_id))) %>%
+  ungroup()
 
-write.table(pr2_tax_C, file.path(workspace_path,"1.1_pr2_tax_C"), row.names = FALSE)
-pr2_tax_C <- read.table(file.path(workspace_path,"1.1_pr2_tax_C"), header = TRUE)
+
+saveRDS(pr2_tax_C, file.path(output_path,"1.1_pr2_tax_C.RDS"))
+pr2_tax_C <-readRDS(file.path(output_path,"1.1_pr2_tax_C.RDS"))
 
 
-
+###### Download Aphia IDs - First try ─────────────────────────────────────────────────────────────
 #Get Worms records for entries where AphiaID is not already known
-print("Start pr2_tax_D")
+print("Start pr2_tax_D: this can take long as well")
 pr2_tax_D <- pr2_tax_C %>%
   mutate(Clean_Name = str_replace_all(Clean_Name, "_", " ")) %>%
   rowwise() %>%
-  mutate(Worms_record = list(tibble()))
+  mutate(Worms_record = list(tibble()))%>%
+  ungroup()
 
 
 pb <- txtProgressBar(min = 1, max = nrow(pr2_tax_D), style = 3)
 
-############## needs long
 for (i in c(1:nrow(pr2_tax_D))) {
   if (is.na(pr2_tax_D$Acc_Name[i])) {
     pr2_tax_D$Worms_record[i] <- try_worms(pr2_tax_D$Clean_Name[i], marine_only = FALSE)
   }
   if (i %% 100 == 0) {
-    saveRDS(pr2_tax_D, file.path(workspace_path, "1.2_pr2_tax_D"))
-    write.table(i, file.path(workspace_path, "1.3_last_save"), row.names = FALSE, col.names = FALSE)
+    saveRDS(pr2_tax_D, file.path(workspace_path, "1.2_pr2_tax_D.RDS"))
+    #write.table(i, file.path(workspace_path, "1.3_last_save"), row.names = FALSE, col.names = FALSE)
   }
   setTxtProgressBar(pb, i)
-}
+}; close(pb); rm(pb)
 
-close(pb); rm(pb)
+saveRDS(pr2_tax_D, file.path(output_path,"1.2_pr2_tax_D.RDS"))
+pr2_tax_D <-readRDS(file.path(output_path,"1.2_pr2_tax_D.RDS"))
 
-
-saveRDS(pr2_tax_D, file.path(output_path,"1.2_pr2_tax_D"))
-pr2_tax_D <-readRDS(file.path(output_path,"1.2_pr2_tax_D"))
-
-
+###### Download Aphia IDs - Second try ─────────────────────────────────────────────────────────────
 #Rerun last step to make sure no entries are missed due to connection problems
 print("Start pr2_tax_E")
 pr2_tax_E <- pr2_tax_D
-
-#pr2_tax_E <- readRDS(file.path(workspace_path,"1.4_pr2_tax_E"))
 
 pb <- txtProgressBar(min = 1, max = nrow(pr2_tax_E), style = 3)
 
@@ -117,18 +141,16 @@ for (i in c(1:nrow(pr2_tax_E))) {
     pr2_tax_E$Worms_record[i] <- try_worms(pr2_tax_E$Clean_Name[i], marine_only = FALSE)
   }
   if (i %% 100 == 0) {
-    saveRDS(pr2_tax_E, file.path(workspace_path,"1.4_pr2_tax_E"))
-    write.table(i, file.path(workspace_path,"1.5_last_save"), row.names = FALSE, col.names = FALSE)
+    saveRDS(pr2_tax_E, file.path(workspace_path,"1.4_pr2_tax_E.RDS"))
+    #write.table(i, file.path(workspace_path,"1.5_last_save"), row.names = FALSE, col.names = FALSE)
   }
   setTxtProgressBar(pb, i)
-}
+}; close(pb); rm(pb)
 
-close(pb); rm(pb)
+saveRDS(pr2_tax_E, file.path(workspace_path,"1.4_pr2_tax_E.RDS"))
+pr2_tax_E <- readRDS(file.path(workspace_path,"1.4_pr2_tax_E.RDS"))
 
-
-saveRDS(pr2_tax_E, file.path(workspace_path,"1.4_pr2_tax_E"))
-pr2_tax_E <- readRDS(file.path(workspace_path,"1.4_pr2_tax_E"))
-
+###### Handle and Update Aphia IDs  ─────────────────────────────────────────────────────────────
 #Split up results: entries that already have AphiaIDs (F_1), new entries with AphiaID (F_2), rest (F_3)
 print("Start pr2_tax_F")
 pr2_tax_F_1 <- pr2_tax_E %>%
@@ -136,16 +158,18 @@ pr2_tax_F_1 <- pr2_tax_E %>%
   select(-Worms_record)
 
 pr2_tax_F_2 <- pr2_tax_E %>%
+  rowwise()%>%
   filter(is.na(Acc_Name)) %>%
   filter(sum(!is.na(Worms_record[[1]])) > 0) %>%
   mutate(n_records = nrow(Worms_record)) %>%
   unnest(cols = Worms_record, names_sep = "_") %>%
+  ungroup()%>%
   #remove records that are not exact matches for entries on species level
   filter(!(Worms_record_rank == "Genus" & Worms_record_match_type != "exact")) 
 
 
-pr2_tax_F_2.1 <- filter_for_right_taxa(pr2_tax_F_2 )%>%  group_by(across(domain:Acc_Aphia)) %>% # mod by JR
-
+pr2_tax_F_2.1 <- filter_for_right_taxa(pr2_tax_F_2 )%>%  
+  group_by(across(domain:Acc_Aphia)) %>% # mod by JR
   nest() %>%
   rowwise() %>%
   
@@ -155,9 +179,10 @@ pr2_tax_F_2.1 <- filter_for_right_taxa(pr2_tax_F_2 )%>%  group_by(across(domain:
   
   mutate(Acc_Name = Worms_record_valid_name) %>%
   mutate(Acc_Aphia = Worms_record_valid_AphiaID) %>%
-  select(-starts_with("Worms_record_"), -n_records)
+  select(-starts_with("Worms_record_"), -n_records)%>%
+  ungroup()
 
-## filtered out information
+## filtered out information ────────────────────────────────────────────────────────────────
 pr2_tax_F_2.2 <- pr2_tax_F_2 %>% filter(!species %in%pr2_tax_F_2.1$species ) %>%
   relocate(Worms_record_kingdom, .after=species) %>%
   relocate(Worms_record_phylum, .after=Worms_record_kingdom) %>%
@@ -173,8 +198,7 @@ pr2_tax_F_3 <- pr2_tax_E %>%
 #Combine all entries
 pr2_tax_FINAL <- bind_rows(pr2_tax_F_1, pr2_tax_F_2.1, pr2_tax_F_3)
 
-
-## Sequence database ##
+###### Sequence database ─────────────────────────────────────────────────────────────
 
 #Remove sequences without taxonomy
 print("Start pr2_A")
@@ -192,19 +216,20 @@ pr2_B <- pr2_A %>%
   dplyr::rename(Clean_Name = Acc_Clean_Name) %>%
   dplyr::rename(Name_accepted = Acc_Acc_Name) %>%
   dplyr::rename(AphiaID = Acc_Acc_Aphia) %>%
-  select(-starts_with("Acc_"))
+  select(-starts_with("Acc_"))%>%
+  ungroup()
 
-saveRDS(pr2_B, file.path(workspace_path,"1.6_pr2_B"))
-pr2_B <- readRDS(file.path(workspace_path,"1.6_pr2_B"))
+saveRDS(pr2_B, file.path(workspace_path,"1.6_pr2_B.RDS"))
+#pr2_B <- readRDS(file.path(workspace_path,"1.6_pr2_B.RDS"))
 
 pr2_FINAL <- pr2_B %>%
   dplyr::rename(Acc_Name = Name_accepted)
 
-write.table(pr2_tax_FINAL, file=file.path(output_path,"1.7_F_Cleanded_pr2_taxonomy"), row.names = FALSE)
-write.table(pr2_FINAL, file=file.path( output_path,"1.8_F_Cleanded_pr2_database"), row.names = FALSE)
+write.table(pr2_tax_FINAL, file=file.path(output_path,"1.7_F_Cleanded_pr2_taxonomy.tsv"), row.names = FALSE, sep="\t")
+write.table(pr2_FINAL, file=file.path( output_path,"1.8_F_Cleanded_pr2_database.rsv"), row.names = FALSE, sep="\t")
 
 
-## Overview ##
+## Overview ##  ────────────────────────────────────────────────────────────────
 
 perc_taxa <- round((nrow(pr2_tax)-nrow(pr2_tax_FINAL))/nrow(pr2_tax) * 100, 2)
 perc_seq <- round((nrow(pr2)-nrow(pr2_FINAL))/nrow(pr2) * 100, 2)
@@ -213,8 +238,8 @@ num_clean <- nrow(pr2_tax_A %>% filter(species != Clean_Name))
 aphia_start <- nrow(pr2_tax %>% filter(!is.na(worms_id))) 
 aphia_end <- nrow(pr2_tax_FINAL %>% filter(!is.na(Acc_Aphia)))
 
-print(getwd())
-sink("1.9_F_Overview_and_statistics.txt")
+workdir <- getwd()
+sink(file.path(workdir,"1.9_F_Overview_and_statistics.txt"))
 
 print(paste("Finalised:", format(Sys.time(), "%a %b %d %X %Y")))
 print(paste("Before cleaning: \t", nrow(pr2), "sequences of", nrow(pr2_tax), "different taxa \n"))
@@ -225,11 +250,7 @@ print(paste("Names cleaned for", num_clean, "species \n"))
 print(paste("AphiaID added for", aphia_end - aphia_start, "species \n"))
 print(paste("AphiaID available for", aphia_end, "species \n"))
 
-## sequences of. cleaning steps
-
-
-
-
+######################## sequences of. cleaning steps ────────────────────────────────────────────────────────────────
 ## remove plastid etc
 pr2_taxt_non18S <- pr2_tax %>%
   filter(str_detect(species, ":mito")  | str_detect(species, ":nucl") |
@@ -245,19 +266,23 @@ nrow(pr2 %>% filter(species %in% pr2_badTax$species )) # sequences
 
 #terminates the connection 
 sink()
-unlink("1.9_F_Overview_and_statistics.txt")
-save.image(file.path(workspace_path, "1.10_Workspace"))
-load(file.path(workspace_path, "1.10_Workspace"))
 
 
-### Check phytoplankton  with algaebaese
+#unlink("1.9_F_Overview_and_statistics.txt")
+save.image(file.path(workspace_path, "1.10_Workspace.RData"))
+#load(file.path(workspace_path, "1.10_Workspace"))
+
+########################################################################################################################## 
+######################################## Check phytoplankton  with algaebaese ############################################ 
+########################################################################################################################## 
 print("Start algaebaese")
 
 pr2_phyto <- filter_pr2_for_algae(pr2_FINAL)
 pr2_non_phyto <- pr2_FINAL %>% filter(!pr2_accession %in%pr2_phyto$pr2_accession )
 
+#optional: rm(pr2_FINAL)
 
-######### query
+######### query  ────────────────────────────────────────────────────────────────
 pr2_phyto <-pr2_phyto %>%mutate(Full_search= ifelse(is.na(Acc_Name), Clean_Name,Acc_Name )) %>%
   mutate(Alg.genus=gsub("^([\\w\\-]+) .*", "\\1", Full_search, perl = T), 
          Alg.epithel= gsub("^[\\w\\-]+ ?([\\w\\-\\.]*).*", "\\1", Full_search, perl = T))
@@ -265,23 +290,23 @@ pr2_phyto <-pr2_phyto %>%mutate(Full_search= ifelse(is.na(Acc_Name), Clean_Name,
 
 
 search <- unique(pr2_phyto[,c("Alg.genus", "Alg.epithel", "class", "Full_search")]) %>% filter(Alg.epithel !="")
+print(paste("Checking algaebase for:",length(search$Full_search), "species"))
 algaebase_species <- check_species_against_Algaebase(search, key, password)
 save(algaebase_species, file= file.path(workspace_path, "PR2__algaebase_info.RData"))
-
-
-load( file= file.path(workspace_path, "PR2__algaebase_info.RData"))
+#load( file= file.path(workspace_path, "PR2__algaebase_info.RData"))
 
 algaebase.species.df <- algaebase_species[[1]]
 algaebase.species.df <- unique(algaebase.species.df)
 non.algaebase.df <- algaebase_species[[2]]
-rm(non.algaebase.df)
+rm(non.algaebase.df,algaebase_species)
 
-## add orginal search
+## add orginal search  ────────────────────────────────────────────────────────────────
 search <- search%>% mutate(request = paste(Alg.genus, Alg.epithel) )%>%
                     mutate( Alg.genus= NULL, Alg.epithel = NULL)%>%
                     dplyr::rename("taxon"=class)
 
-algaebase.species.df <- merge( algaebase.species.df, search, by= c("request", "taxon"))
+algaebase.species.df <- algaebase.species.df %>% 
+  full_join( search, by= c("request", "taxon", "Full_search"))
 rm(search)
 
 algaebase.species.df_cleaned <- algaebase_species_clean_up(algaebase.species.df)
@@ -293,7 +318,7 @@ algaebase.species.df_short <- algaebase.species.df_cleaned[,c("Algaebase_search"
   unique()%>%
   dplyr::rename("class" = taxon)
 
-#combien with non phytoplankton data
+#combien with non phytoplankton data  ────────────────────────────────────────────────────────────────
 colnames(pr2_phyto)
 pr2_phyto_F <- pr2_phyto %>%
     dplyr::rename("Algaebase_search"=Full_search)
@@ -306,10 +331,14 @@ pr2_phyto_F <-algaebase.species.df_short %>%
 
 
 pr2_FINAL2 <- plyr::rbind.fill(pr2_non_phyto,pr2_phyto_F)
-write.table(pr2_FINAL2, file.path( output_path,"1.12_F_Cleaned_pr2_database_wAlgbase.tsv"), row.names = FALSE, sep="\t", quote=T)
-#write.table(pr2_FINAL2, file.path( output_path,"1.12_F_Cleaned_pr2_database_wAlgbase"), row.names = FALSE)
-save.image(file.path(workspace_path, "1.13_Workspace"))
-load(file.path(workspace_path, "1.13_Workspace"))
 
+## strip html before saving  ────────────────────────────────────────────────────────────────
+pr2_FINAL2 <- pr2_FINAL2 %>%  mutate(across(where(is.character), strip_html))
+write.table(pr2_FINAL2, file.path(output_path, "1.12_F_Cleaned_pr2_database_wAlgbase.tsv"),row.names = FALSE, sep = "\t", quote = F)
+saveRDS(pr2_FINAL2,file.path(output_path, "1.12_F_Cleaned_pr2_database_wAlgbase.RDS") )
+
+
+save.image(file.path(workspace_path, "1.13_Workspace.RData"))
+load(file.path(workspace_path, "1.13_Workspace.RData"))
 
 

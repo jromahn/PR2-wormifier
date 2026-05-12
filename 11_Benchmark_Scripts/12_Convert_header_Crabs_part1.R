@@ -10,7 +10,8 @@ require(dplyr)
 require(stringr)
 require(phylotools)
 
-path <- "11_Benchmark_Database_Versions"
+path <- "11_Benchmark_Database_Versions_Euka02"
+primer<-"Euka02"
 
 
 ########################################################################################
@@ -18,7 +19,7 @@ path <- "11_Benchmark_Database_Versions"
 
 ## Read in sequences and replace header with "fake" accession numbers to be compliant with crabs
 #Version 1
-sequences_1 <- read.fasta(file.path(path,"DB_V1_Sequences.fasta")) %>%
+sequences_1 <- read.fasta(file.path(path,paste("DB_V1",primer, "Sequences.fasta", sep="_"))) %>%
   mutate(fake_header = paste("AB", row_number(), ".1", sep = "")) %>%
   mutate(dummy = 10 - nchar(fake_header)) %>%
   mutate(row_num = row_number()) %>%
@@ -33,7 +34,7 @@ new_sequences_1 <- sequences_1 %>%
 
 
 #Version 2
-sequences_2 <- read.fasta(file.path(path,"DB_V2_Sequences.fasta")) %>%
+sequences_2 <- read.fasta(file.path(path,paste("DB_V2",primer, "Sequences.fasta", sep="_"))) %>%
   mutate(fake_header = paste("AB", row_number(), ".1", sep = "")) %>%
   mutate(dummy = 10 - nchar(fake_header)) %>%
   mutate(row_num = row_number()) %>%
@@ -48,7 +49,7 @@ new_sequences_2 <- sequences_2 %>%
 
 
 #Version 3
-sequences_3 <- read.fasta(file.path(path,"DB_V3_Sequences.fasta")) %>%
+sequences_3 <- read.fasta(file.path(path,paste("DB_V3",primer, "Sequences.fasta", sep="_"))) %>%
   mutate(fake_header = paste("AB", row_number(), ".1", sep = "")) %>%
   mutate(dummy = 10 - nchar(fake_header)) %>%
   mutate(row_num = row_number()) %>%
@@ -63,7 +64,7 @@ new_sequences_3 <- sequences_3 %>%
 
 
 #Version 4
-sequences_4 <- read.fasta(file.path(path,"DB_V4_Sequences.fasta")) %>%
+sequences_4 <- read.fasta(file.path(path,paste("DB_V4",primer, "Sequences.fasta", sep="_"))) %>%
   mutate(fake_header = paste("AB", row_number(), ".1", sep = "")) %>%
   mutate(dummy = 10 - nchar(fake_header)) %>%
   mutate(row_num = row_number()) %>%
@@ -77,7 +78,7 @@ new_sequences_4 <- sequences_4 %>%
   rename(seq.name = fake_header)
 
 ## Write files with sequences with "fake" header
-dat2fasta(new_sequences_1, file.path(path,"DB_V1_Sequences_fake_header.fasta"))
-dat2fasta(new_sequences_2, file.path(path,"DB_V2_Sequences_fake_header.fasta"))
-dat2fasta(new_sequences_3, file.path(path,"DB_V3_Sequences_fake_header.fasta"))
-dat2fasta(new_sequences_4, file.path(path,"DB_V4_Sequences_fake_header.fasta"))
+dat2fasta(new_sequences_1, file.path(path,paste("DB_V1",primer, "Sequences_fake_header.fasta", sep="_")))
+dat2fasta(new_sequences_2, file.path(path,paste("DB_V2",primer, "Sequences_fake_header.fasta", sep="_")))
+dat2fasta(new_sequences_3, file.path(path,paste("DB_V3",primer, "Sequences_fake_header.fasta", sep="_")))
+dat2fasta(new_sequences_4, file.path(path,paste("DB_V4",primer, "Sequences_fake_header.fasta", sep="_")))

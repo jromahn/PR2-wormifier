@@ -1,38 +1,60 @@
 ################################################################################
 #This script can be used to calculate the summary and the 
 # comparison of the different databases
+# combine results of both taxa
+# run after '14_Treemaps_db_results.R' and '14_Treemaps_db_results_dino.R'
 ################################################################################
+rm(list = ls())
 require(tidyr)
 require(dplyr)
 require(stringr)
-
+library(openxlsx)
 
 
 #setwd("/PATH/TO/02_Scripts_folder") # to path above the Script folder
-setwd("/Users/juliane/Documents/00_Work_SGN/00_PhytoArk/XX_PAPERS/2025_stefanie_wormifier/00_code_new")
 source("00_Function_Library.R") # read file with functions
+source("11_Benchmark_Scripts/00_Functions_Benchmark.R") # read file with functions
 read_simple_ini("00_login_data.ini")
 
 # path of the databases
-path <- "11_Benchmark_Database_Versions"
+path <- "11_Benchmark_Database_Versions_Euka02"
+primer <- "Euka02"
 crabs_database4 <- "11_Euka02_Taxonomy_DB4.tax"
 
 ##
 overview <- read.table("10_FINAL_results/9.6_Overview_Sequences_FINAL.csv", header = TRUE)
 
 #original pr2 database - taxonomy file for mothur
-path_pr2 <- "../"
-pr2_tax<- read.table(file.path(path_pr2,"pr2_version_5.1.0_SSU_mothur.tax"))
+path_pr2 <- "/Users/jromahn/Documents/XX_PAPERS/2025sub_stefanie_wormifier/pr2_5.1.1"
+pr2_tax<- read.table(file.path(path_pr2,"pr2_version_5.1.1_SSU_mothur.tax"))
 
 
 #output
-output_path <- "13_Analyses_2025"
+output_path <- "13_Analyses_2026_Euka02"
+path_creation(output_path)
+
+### excel for supplementary
+excel_results <- paste("15_Supplementary_2_overview_Database_",primer,".xlsx",sep="")
+excel_results_2 <- paste("15_Supplementary_2_overview_Assignments_",primer,".xlsx",sep="")
+
+cil_compGen <- file.path(output_path, "tables", "13_Ciliate_RefDBcomparison__genus_readsNasvs.tsv" )
+cil_compFam <- file.path(output_path, "tables", "13_Ciliate_family_list_RefDBcomparison.tsv" )
+cil_compSpec <- file.path(output_path, "tables", "13_Ciliate_Analysis_RefDB_comparison__assigned.tsv" )
+din_compGen <- file.path(output_path, "tables", "13_Dinophyceae_RefDBcomparison__genus_readsNasvs.tsv" )
+din_compFam <- file.path(output_path, "tables", "13_Dinophyceae_family_list_RefDBcomparison.tsv" )
+din_compSpec <- file.path(output_path, "tables", "13_Dinophyceae_Analysis_RefDB_comparison__assigned.tsv" )
+
+cil_compGen <- read.table(file=cil_compGen, sep="\t", header = T)
+cil_compFam <- read.table(file=cil_compFam, sep="\t", header = T)
+cil_compSpec <- read.table(file=cil_compSpec, sep="\t", header = T)
+din_compGen <- read.table(file=din_compGen, sep="\t", header = T)
+din_compFam <- read.table(file=din_compFam, sep="\t", header = T)
+din_compSpec <- read.table(file=din_compSpec, sep="\t", header = T)
 
 
 ## list with Baltic Species
 baltic_list <- file.path(input_path, input_table)
 species_list <- read.table(baltic_list, header = TRUE, sep = ",")
-
 #######################################################################################
 
 ###########
@@ -55,11 +77,13 @@ pr2_badTax <- pr2_tax %>%
            str_detect(Species, "^[[:upper:]][[:upper:]]")) 
 #deleted bad taxonomy
 nrow(pr2_badTax)
-  
+
 pr2_badTax_Cil <-pr2_badTax %>% filter(Class=="Ciliophora")
+pr2_badTax_Din <-pr2_badTax %>% filter(Subclass=="Dinophyceae")
 
 #deleted bad taxonomy Ciliophora
 nrow(pr2_badTax_Cil)
+nrow(pr2_badTax_Din)
 
 
 pr2_badTax_Cil_sum <- pr2_badTax_Cil %>% group_by(Subclass, Order, Family,Species)%>%
@@ -69,6 +93,14 @@ pr2_badTax_Cil_sum <- pr2_badTax_Cil %>% group_by(Subclass, Order, Family,Specie
                 seq= sum(seq))
 
 write.table(pr2_badTax_Cil_sum, file = file.path(output_path, "15_Ciliate_stats_deletedSeq_noTax_familyLevel.tsv"), row.names = F, sep="\t")
+
+pr2_badTax_Din_sum <- pr2_badTax_Din %>% group_by(Order, Family,Species)%>%
+  summarise(seq= n())%>% 
+  group_by( Order, Family)%>%
+  summarise(Species= n(),
+            seq= sum(seq))
+
+write.table(pr2_badTax_Din_sum, file = file.path(output_path, "15_Dinophyceae_stats_deletedSeq_noTax_familyLevel.tsv"), row.names = F, sep="\t")
 
 
 
@@ -181,10 +213,11 @@ length(unique(included$genus))
 
 #perecentage
 length(unique(included$genus))/length(unique(species_list$genus)) * 100
-stats_df <- rbind(stats_df, data.frame(database= "V4", variable ="Represented Baltic Genus (%)", value= length(unique(included$genus))/length(unique(species_list$genus)) * 100))
+stats_df <- rbind(stats_df, data.frame(database= "V4", variable ="Represented Baltic Genus (%)", value= round(length(unique(included$genus))/length(unique(species_list$genus)) * 100, 2)))
 
 #####
 # extract how many of the Baltic listed genera are in the final database
+#### Ciliates
 ciliate_list <- species_list %>% filter(taxon == "Ciliophora")
 included_cil <- ciliate_list %>% filter(genus %in% tax$V8)
 
@@ -195,7 +228,20 @@ length(unique(included_cil$genus))
 stats_df <- rbind(stats_df, data.frame(database= "V4", variable ="Baltic Ciliate Genus No.", value= length(unique(included_cil$genus))))
 
 length(unique(included_cil$genus))/length(unique(ciliate_list$genus)) * 100
-stats_df <- rbind(stats_df, data.frame(database= "V4", variable ="Represented Baltic Ciliate Genus (%)", value= length(unique(included_cil$genus))/length(unique(ciliate_list$genus)) * 100))
+stats_df <- rbind(stats_df, data.frame(database= "V4", variable ="Represented Baltic Ciliate Genus (%)", value= round(length(unique(included_cil$genus))/length(unique(ciliate_list$genus)) * 100,2)))
+
+#### Dinophyceae
+dino_list <- species_list %>% filter(taxon == "Dinophyceae")
+included_din <- dino_list %>% filter(genus %in% tax$V8)
+
+length(unique(dino_list$genus))
+stats_df <- rbind(stats_df, data.frame(database= "Species list", variable ="Dinophyceae Genus No.", value= length(unique(dino_list$genus))))
+
+length(unique(included_din$genus))
+stats_df <- rbind(stats_df, data.frame(database= "V4", variable ="Baltic Dinophyceae Genus No.", value= length(unique(included_din$genus))))
+
+length(unique(included_din$genus))/length(unique(dino_list$genus)) * 100
+stats_df <- rbind(stats_df, data.frame(database= "V4", variable ="Represented Baltic Dinophyceae Genus (%)", value= round(length(unique(included_din$genus))/length(unique(dino_list$genus)) * 100,2)))
 
 
 ##stats compared to orginal PR2 database
@@ -204,6 +250,7 @@ pr2_tax <- read.table("00_input/pr2_version_5.0.0_SSU_mothur.tax", sep="\t") %>%
 
 included_pr2 <- species_list %>% filter(genus %in% pr2_tax$genus)
 included_cil_pr2 <- ciliate_list %>% filter(genus %in% pr2_tax$genus)
+included_din_pr2 <- dino_list %>% filter(genus %in% pr2_tax$genus)
 
 # extract how many of the Baltic listed genera are in the original PR2 database
 length(unique(species_list$genus))
@@ -219,6 +266,14 @@ length((unique(included_cil_pr2$genus)))/length(unique(ciliate_list$genus)) *100
 
 stats_df <- rbind(stats_df, data.frame(database= "V1", variable ="Baltic Ciliate Genus No.", value= length((unique(included_cil_pr2$genus)))))
 stats_df <- rbind(stats_df, data.frame(database= "V1", variable ="Represented Baltic Ciliate Genus (%)", value= length((unique(included_cil_pr2$genus)))/length(unique(ciliate_list$genus)) *100))
+
+# extract how many of the Baltic listed dinoflagellates genera are in the original PR2 database
+length((unique(included_din_pr2$genus)))
+length((unique(included_din_pr2$genus)))/length(unique(ciliate_list$genus)) *100
+
+stats_df <- rbind(stats_df, data.frame(database= "V1", variable ="Baltic Dinophyceae Genus No.", value= length((unique(included_din_pr2$genus)))))
+stats_df <- rbind(stats_df, data.frame(database= "V1", variable ="Represented Baltic Dinophyceae Genus (%)", value= length((unique(included_din_pr2$genus)))/length(unique(dino_list$genus)) *100))
+
 ########################################
 #extract stats about removed sequences
 no_tax <- overview %>% 
@@ -261,7 +316,15 @@ deleted_pr2_tax %>% group_by(supergroup, division,subdivision,class, order,famil
   arrange(desc(no))
 
 
-## save
+## check how many possible BAltic Species were deleted
+deleted_pr2_tax%>%
+  mutate(Baltic = genus %in% species_list$genus)%>%
+  group_by(Baltic)%>%
+  summarise(no_seq =n())
+
+## round((99 / (99+40771))*100,2)
+#######################################################################################
+
 
 noTax_stats_subdvision <- deleted_pr2_tax %>% group_by(supergroup, division,subdivision)%>%
   summarise(no_seq =n())%>%
@@ -320,7 +383,7 @@ stats_df <- rbind(stats_df, data.frame(database= "V2", variable ="Deleted Chelic
 ## stats databases:
 
 ### database 1 
-db1 <-  read.table(file.path(path,"DB_V1_Taxonomy.tax"), sep = " ")%>%
+db1 <-  read.table(file.path(path,paste("DB_V1",primer,"Taxonomy.tax",sep="_")), sep = " ")%>%
   mutate(order = str_split_i(V2, ";", 6))%>%
   mutate(family = str_split_i(V2, ";", 7))%>%
   mutate(genus = str_split_i(V2, ";",8))%>%
@@ -342,7 +405,7 @@ stats <- calculate_refstats(db1, "V1")
 stats_df_DB <- rbind(stats_df_DB, stats)
 
 ### database 2 
-db2<-  read.table(file.path(path,"DB_V2_Taxonomy.tax"), sep = " ")%>%
+db2<-  read.table(file.path(path,paste("DB_V2",primer,"Taxonomy.tax",sep="_")), sep = " ")%>%
   mutate(order = str_split_i(V2, ";", 6))%>%
   mutate(family = str_split_i(V2, ";", 7))%>%
   mutate(genus = str_split_i(V2, ";",8))%>%
@@ -363,7 +426,7 @@ stats <- calculate_refstats(db2, "V2")
 stats_df_DB <- rbind(stats_df_DB, stats)
 
 ### database 3
-db3<-  read.table(file.path(path,"DB_V3_Taxonomy.tax"), sep = " ")%>%
+db3<-  read.table(file.path(path,paste("DB_V3",primer,"Taxonomy.tax",sep="_")), sep = " ")%>%
   mutate(order = str_split_i(V2, ";", 6))%>%
   mutate(family = str_split_i(V2, ";", 7))%>%
   mutate(genus = str_split_i(V2, ";",8))%>%
@@ -385,7 +448,7 @@ stats <- calculate_refstats(db3, "V3")
 stats_df_DB <- rbind(stats_df_DB, stats)
 
 ### database 4
-db4<-  read.table(file.path(path,"DB_V4_Taxonomy.tax"), sep = " ")%>%
+db4<-  read.table(file.path(path,paste("DB_V4",primer,"Taxonomy.tax",sep="_")), sep = " ")%>%
   mutate(order = str_split_i(V2, ";", 6))%>%
   mutate(family = str_split_i(V2, ";", 7))%>%
   mutate(genus = str_split_i(V2, ";",8))%>%
@@ -423,7 +486,7 @@ length(unique(db4_amp$Family)%>%na.omit())
 length(unique(db4_amp$Genus)%>%na.omit())
 length(unique(db4_amp$Species)%>%na.omit())
 
-stats <- calculate_refstats(db4_amp, "V4 CRABS")
+stats <- calculate_refstats(db4_amp, paste0("V4 CRABS", primer) )
 stats_df_DB <- rbind(stats_df_DB, stats)
 
 
@@ -463,5 +526,67 @@ write.table(stats_rest, file = file.path(output_path, "15_Summary_stats_NON_DBV4
 
 stats_df_DB <- stats_df_DB %>% pivot_wider(names_from = "database", values_from = "value")%>% arrange(variable)
 write.table(stats_df_DB, file = file.path(output_path, "15_Summary_stats_general.tsv"), row.names = F, sep="\t")
+
+
+
+
+# Create supplementary table FOR THE DATABASE
+
+
+wb <- createWorkbook()
+
+addWorksheet(wb, "S1 - Database Summaries")
+writeData(wb, "S1 - Database Summaries", stats_df_DB)
+
+addWorksheet(wb, "S2 - PR2 Deleted major Taxa")
+writeData(wb, "S2 - PR2 Deleted major Taxa", stats_deletedSeq)
+
+
+addWorksheet(wb, "S3 - PR2 deleted Ciliates")
+writeData(wb, "S3 - PR2 deleted Ciliates", pr2_badTax_Cil_sum)
+
+## new
+addWorksheet(wb, "S4 - PR2 deleted Dinofl.")
+writeData(wb, "S4 - PR2 deleted Dinofl.", pr2_badTax_Din_sum)
+
+stats_taxo <- stats_taxo%>%
+  separate(col = "variable", into = c("pattern", "Abbreviation"), sep = "-")%>%
+  pivot_wider(names_from = "pattern", values_from = "value")
+
+addWorksheet(wb, "S5 - Final Taxonomy Resource")
+writeData(wb, "S5 - Final Taxonomy Resource", stats_taxo)
+
+
+stats_many <- stats_many %>% arrange(database, variable)
+addWorksheet(wb, "S6 - DB V1 & V4")
+writeData(wb, "S6 - DB V1 & V4", stats_many)
+
+
+saveWorkbook(wb, file = excel_results, overwrite = TRUE)
+
+# Create supplementary table FOR THE specific one
+
+wb2 <- createWorkbook()
+
+addWorksheet(wb2, "S1 - Ciliate Genera Assignments")
+writeData(wb2, "S1 - Ciliate Genera Assignments", cil_compGen)
+
+addWorksheet(wb2, "S2 - Ciliate ASV Family Level")
+writeData(wb2, "S2 - Ciliate ASV Family Level", cil_compFam)
+
+addWorksheet(wb2, "S3 - Ciliate ASV Species Level")
+writeData(wb2, "S3 - Ciliate ASV Species Level", cil_compSpec)
+
+
+addWorksheet(wb2, "S4 - Dinofl. Genera Assignments")
+writeData(wb2, "S4 - Dinofl. Genera Assignments", din_compGen)
+
+addWorksheet(wb2, "S5 - Dinofl. ASV Family Level")
+writeData(wb2, "S5 - Dinofl. ASV Family Level", din_compFam)
+
+addWorksheet(wb2, "S5 - Dinofl. ASV Species Level")
+writeData(wb2, "S5 - Dinofl. ASV Species Level", din_compSpec)
+
+saveWorkbook(wb2, file = excel_results_2, overwrite = TRUE)
 
 

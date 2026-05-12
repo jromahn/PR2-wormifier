@@ -11,19 +11,19 @@ require(dplyr)
 require(stringr)
 require(phylotools)
 
-path <- "11_Benchmark_Database_Versions"
+path <- "11_Benchmark_Database_Versions_Euka02"
 primer <- "Euka02"
 
-CRAB_file_db1 <- "DB_V1_Amplicons_fake_header_L500_P0.85.fasta"
-CRAB_file_db2 <- "DB_V2_Amplicons_fake_header_L500_P0.85.fasta"
-CRAB_file_db3 <- "DB_V3_Amplicons_fake_header_L500_P0.85.fasta"
-CRAB_file_db4 <- "DB_V4_Amplicons_fake_header_L500_P0.85.fasta"
+CRAB_file_db1 <- paste("DB_V1", primer,"Amplicons_fake_header_L500_P0.85.fasta",sep="_")
+CRAB_file_db2 <- paste("DB_V2", primer,"Amplicons_fake_header_L500_P0.85.fasta",sep="_")
+CRAB_file_db3 <- paste("DB_V3", primer,"Amplicons_fake_header_L500_P0.85.fasta",sep="_")
+CRAB_file_db4 <- paste("DB_V4", primer,"Amplicons_fake_header_L500_P0.85.fasta",sep="_")
 
 
 ########################################################################################
 
 ### read in original sequences
-sequences_1 <- read.fasta(file.path(path,"DB_V1_Sequences.fasta")) %>%
+sequences_1 <- read.fasta(file.path(path,paste("DB_V1", primer,"Sequences.fasta",sep="_"))) %>%
   mutate(fake_header = paste("AB", row_number(), ".1", sep = "")) %>%
   mutate(dummy = 10 - nchar(fake_header)) %>%
   mutate(row_num = row_number()) %>%
@@ -31,7 +31,7 @@ sequences_1 <- read.fasta(file.path(path,"DB_V1_Sequences.fasta")) %>%
   mutate(fake_header = paste("AB", paste(rep("0", dummy), collapse = ""), row_num, ".1", sep = "")) %>%
   select(-c(dummy, row_num))
 
-sequences_2 <- read.fasta(file.path(path,"DB_V2_Sequences.fasta")) %>%
+sequences_2 <- read.fasta(file.path(path,paste("DB_V2", primer,"Sequences.fasta",sep="_"))) %>%
   mutate(fake_header = paste("AB", row_number(), ".1", sep = "")) %>%
   mutate(dummy = 10 - nchar(fake_header)) %>%
   mutate(row_num = row_number()) %>%
@@ -39,7 +39,7 @@ sequences_2 <- read.fasta(file.path(path,"DB_V2_Sequences.fasta")) %>%
   mutate(fake_header = paste("AB", paste(rep("0", dummy), collapse = ""), row_num, ".1", sep = "")) %>%
   select(-c(dummy, row_num))
 
-sequences_3 <- read.fasta(file.path(path,"DB_V3_Sequences.fasta")) %>%
+sequences_3 <- read.fasta(file.path(path,paste("DB_V3", primer,"Sequences.fasta",sep="_"))) %>%
   mutate(fake_header = paste("AB", row_number(), ".1", sep = "")) %>%
   mutate(dummy = 10 - nchar(fake_header)) %>%
   mutate(row_num = row_number()) %>%
@@ -47,7 +47,7 @@ sequences_3 <- read.fasta(file.path(path,"DB_V3_Sequences.fasta")) %>%
   mutate(fake_header = paste("AB", paste(rep("0", dummy), collapse = ""), row_num, ".1", sep = "")) %>%
   select(-c(dummy, row_num))
 
-sequences_4 <- read.fasta(file.path(path,"DB_V4_Sequences.fasta")) %>%
+sequences_4 <- read.fasta(file.path(path,paste("DB_V4", primer,"Sequences.fasta",sep="_"))) %>%
   mutate(fake_header = paste("AB", row_number(), ".1", sep = "")) %>%
   mutate(dummy = 10 - nchar(fake_header)) %>%
   mutate(row_num = row_number()) %>%
@@ -108,7 +108,7 @@ amplicons_1_accessions <- amplicons_1 %>%
   mutate(accession = str_split_i(seq.name, " ", 1)) %>%
   select(-seq.name, -seq.text)
 
-taxonomy_1 <- read.table(file.path(path,"DB_V1_Taxonomy.tax")) %>%
+taxonomy_1 <- read.table(file.path(path,paste("DB_V1", primer,"Taxonomy.tax",sep="_"))) %>%
   filter(V1 %in% amplicons_1_accessions$accession) %>%
   arrange(V1)
 
@@ -117,7 +117,7 @@ amplicons_2_accessions <- amplicons_2 %>%
   mutate(accession = str_split_i(seq.name, " ", 1)) %>%
   select(-seq.name, -seq.text)
 
-taxonomy_2 <- read.table(file.path(path,"DB_V2_Taxonomy.tax")) %>%
+taxonomy_2 <- read.table(file.path(path,paste("DB_V2", primer,"Taxonomy.tax",sep="_"))) %>%
   filter(V1 %in% amplicons_2_accessions$accession) %>%
   arrange(V1)
 
@@ -126,7 +126,7 @@ amplicons_3_accessions <- amplicons_3 %>%
   mutate(accession = str_split_i(seq.name, " ", 1)) %>%
   select(-seq.name, -seq.text)
 
-taxonomy_3 <- read.table(file.path(path,"DB_V3_Taxonomy.tax")) %>%
+taxonomy_3 <- read.table(file.path(path,paste("DB_V3", primer,"Taxonomy.tax",sep="_"))) %>%
   filter(V1 %in% amplicons_3_accessions$accession) %>%
   arrange(V1)
 
@@ -135,7 +135,7 @@ amplicons_4_accessions <- amplicons_4 %>%
   mutate(accession = str_split_i(seq.name, " ", 1)) %>%
   select(-seq.name, -seq.text)
 
-taxonomy_4 <- read.table(file.path(path,"DB_V4_Taxonomy.tax")) %>%
+taxonomy_4 <- read.table(file.path(path,paste("DB_V4", primer,"Taxonomy.tax",sep="_"))) %>%
   filter(V1 %in% amplicons_4_accessions$accession) %>%
   arrange(V1)
 

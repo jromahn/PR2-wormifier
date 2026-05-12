@@ -1,4 +1,4 @@
-path="11_Benchmark_Database_Versions"
+path="11_Benchmark_Database_Versions_Euka02"
 
 
 primer_forward="TTTGTCTGSTTAATTSCG"

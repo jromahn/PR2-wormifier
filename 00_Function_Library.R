@@ -10,8 +10,54 @@ path_creation <- function(path){
   }
 }
 
+# Read and parse key-value pairs from ini-style file
+read_simple_ini <- function(path) {
+  lines <- readLines(path, warn = FALSE)
+  lines <- trimws(lines)
+  lines <- lines[!grepl("^\\s*#", lines)]  # remove comments
+  lines <- lines[nzchar(lines)]           # remove empty lines
+  q
+  kv_pairs <- strsplit(lines, "=", fixed = TRUE)
+  kv_pairs <- lapply(kv_pairs, function(x) setNames(trimws(gsub('"', '', x[2])), trimws(x[1])))
+  values <- do.call(c, kv_pairs)
+  
+  list2env(as.list(values), envir = .GlobalEnv)
+}
+
+## replace unknown taxonomy levels with _X
+fill_taxonomy <- function(data){
+  data_new <- data %>%
+    rowwise() %>%
+    mutate(Phylum = replace(Phylum, is.na(Phylum), paste(Kingdom, "_X", sep = ""))) %>%
+    mutate(Subphylum = replace(Subphylum, is.na(Subphylum), paste(Phylum, "_X", sep = ""))) %>%
+    mutate(Class = replace(Class, is.na(Class), paste(Subphylum, "_X", sep = ""))) %>%
+    mutate(Subclass = replace(Subclass, is.na(Subclass), paste(Class, "_X", sep = ""))) %>%
+    mutate(Order = replace(Order, is.na(Order), paste(Subclass, "_X", sep = ""))) %>%
+    mutate(Family = replace(Family, is.na(Family), paste(Order, "_X", sep = ""))) %>%
+    mutate(Genus = replace(Genus, is.na(Genus), paste(Family, "_X", sep = "")))%>%
+    ungroup()
+  
+  return(data_new)
+}
+
+# Define parser for NCBI taxonomy based on fixed positions
+parse_taxonomy <- function(taxonomy_str, species_name) {
+  tax <- unlist(strsplit(taxonomy_str, ";"))
+  out <- list(
+    superkingdom = ifelse(length(tax) >= 1, tax[1], NA),
+    phylum = ifelse(length(tax) >= 4, tax[4], NA),
+    class = ifelse(length(tax) >= 6, tax[6], NA),
+    order = ifelse(length(tax) >= 10, tax[10], NA),
+    family = ifelse(length(tax) >= 13, tax[13], NA),
+    genus = ifelse(length(tax) >= 14, tax[14], NA),
+    species = species_name,
+    stringsAsFactors = FALSE
+  )
+  return(out)
+}
+
 ##################
-# Filter
+# ── filter functions ─────────────────────────────────────────────────────────────
 
 #filter out wrongly matched taxa based on pr2 taxonomy
 ## dependency : dplyr
@@ -58,8 +104,10 @@ clean_pr2_taxonomy <- function(data){
   return(data2)
 }
 
+
 filter_for_right_taxa <- function(data){
   data2 <- data %>%
+  rowwise()%>%
   filter(!(order == "Trematoda" & Worms_record_class != "Trematoda")) %>%  
   filter(!(subdivision == "Fungi" & Worms_record_kingdom != "Fungi")) %>%                       
   filter(!(subdivision == "Metazoa" & Worms_record_kingdom != "Animalia")) %>%
@@ -85,7 +133,8 @@ filter_for_right_taxa <- function(data){
     filter(!(class == "Porifera" & Worms_record_phylum != "Porifera")) %>%
     filter(!(class == "Rotifera" & Worms_record_phylum != "Rotifera")) %>%# new
     filter(!(family == "Rhabdocoela" & Worms_record_order != "Rhabdocoela")) %>%
-    filter(!(order == "Trematoda" & Worms_record_class != "Trematoda")) 
+    filter(!(order == "Trematoda" & Worms_record_class != "Trematoda")) %>%
+    ungroup()
   
   # just to douple check if maybe we lost some
   data3 <- data %>%
@@ -145,7 +194,8 @@ filter_pr2_for_algae <- function(data){
 }
 
 ##################
-#Worms functions  - single entry no vectors or list
+# ── worrms functions ─────────────────────────────────────────────────────────────
+
 # dependency: "worrms"
 
 try_worms <- function(name, marine_only = FALSE) {
@@ -169,8 +219,8 @@ try_names <- function(name, marine_only = FALSE) {
 }
 
 
-#################
-# Algaebase functions
+# ── algaebase functions ─────────────────────────────────────────────────────────────
+
 ### dependencies jsonlite & curl
 
 # input: data frame with at least three columns: genus, species epithel, taxonomic group
@@ -346,7 +396,8 @@ check_genus_n_taxonomy_algaebase <- function(data, key, password ){
   return(new_data)
 }
 
-####### Stats
+# ── statistics functions ─────────────────────────────────────────────────────────────
+
 calculcate_uniq_entries <- function(data, column){
   number <- data %>%pull({{column}}) %>% unique() %>%na.omit() %>%length()
   return(number)
@@ -355,21 +406,6 @@ calculcate_entries <- function(data, column){
   number <- data %>%pull({{column}})%>%na.omit() %>%length()
   return(number)
 }
-
-# Read and parse key-value pairs from ini-style file
-read_simple_ini <- function(path) {
-  lines <- readLines(path, warn = FALSE)
-  lines <- trimws(lines)
-  lines <- lines[!grepl("^\\s*#", lines)]  # remove comments
-  lines <- lines[nzchar(lines)]           # remove empty lines
-  
-  kv_pairs <- strsplit(lines, "=", fixed = TRUE)
-  kv_pairs <- lapply(kv_pairs, function(x) setNames(trimws(gsub('"', '', x[2])), trimws(x[1])))
-  values <- do.call(c, kv_pairs)
-  
-  list2env(as.list(values), envir = .GlobalEnv)
-}
-
 
 calculate_refstats <- function(data, db_type){
   stats_df_DB <- data.frame()
@@ -385,6 +421,13 @@ calculate_refstats <- function(data, db_type){
   stats_df_DB <- rbind(stats_df_DB, data.frame(database= db_type, variable ="Ciliate Genus No.", value=calculcate_uniq_entries(data %>% filter(grepl("Ciliophora",V2)), "Genus")))
   stats_df_DB <- rbind(stats_df_DB, data.frame(database= db_type, variable ="Ciliate Species No.", value=calculcate_uniq_entries(data %>% filter(grepl("Ciliophora",V2)), "Species")))
   
+  stats_df_DB <- rbind(stats_df_DB, data.frame(database= db_type, variable ="Dinophyceae Sequence No.", value= nrow(data %>% filter(grepl("Dinophyceae",V2)))))
+  stats_df_DB <- rbind(stats_df_DB, data.frame(database= db_type, variable ="Dinophyceae Order No.", value= calculcate_uniq_entries(data %>% filter(grepl("Dinophyceae",V2)), "order")))
+  stats_df_DB <- rbind(stats_df_DB, data.frame(database= db_type, variable ="Dinophyceae Family No.", value=calculcate_uniq_entries(data %>% filter(grepl("Dinophyceae",V2)), "Family")))
+  stats_df_DB <- rbind(stats_df_DB, data.frame(database= db_type, variable ="Dinophyceae Genus No.", value=calculcate_uniq_entries(data %>% filter(grepl("Dinophyceae",V2)), "Genus")))
+  stats_df_DB <- rbind(stats_df_DB, data.frame(database= db_type, variable ="Dinophyceae Species No.", value=calculcate_uniq_entries(data %>% filter(grepl("Dinophyceae",V2)), "Species")))
+  
+  
   stats_df_DB <- rbind(stats_df_DB, data.frame(database= db_type, variable ="Order Seq. No.", value= calculcate_entries(data, "order")))
   stats_df_DB <- rbind(stats_df_DB, data.frame(database= db_type, variable ="Family Seq. No.", value=calculcate_entries(data, "Family")))
   stats_df_DB <- rbind(stats_df_DB, data.frame(database= db_type, variable ="Genus Seq. No.", value=calculcate_entries(data, "Genus")))
@@ -393,3 +436,61 @@ calculate_refstats <- function(data, db_type){
   return(stats_df_DB)
   
 }
+
+strip_html <- function(x) gsub("<.*?>", "", x)
+
+# ── entrez functions ─────────────────────────────────────────────────────────────
+
+# Retry wrapper – mirrors the `while attempts < 3` logic
+with_retry <- function(expr, max_attempts = 3, genus = NA, log_con = NULL) {
+  for (attempt in seq_len(max_attempts)) {
+    result <- tryCatch(
+      { force(expr); "ok" },
+      error = function(e) {
+        msg <- paste0("Attempt ", attempt, " failed: ", conditionMessage(e))
+        message(msg)
+        if (!is.null(log_con)) writeLines(msg, log_con)
+        Sys.sleep(2)        # brief back-off before retry
+        e
+      }
+    )
+    if (identical(result, "ok")) return(invisible(TRUE))
+  }
+  return(invisible(FALSE))
+}
+
+# Parse GenBank flat-file text and return a data.frame of accession info rows
+parse_genbank_info <- function(gb_text, label) {
+  # Split into individual records
+  records <- strsplit(gb_text, "\n//")[[1]]
+  records <- records[nzchar(trimws(records))]
+  
+  rows <- lapply(records, function(rec) {
+    get_field <- function(pattern) {
+      m <- regmatches(rec, regexpr(pattern, rec, perl = TRUE))
+      if (length(m) == 0) return("N/A")
+      sub(pattern, "\\1", m, perl = TRUE)
+    }
+    
+    label     <- get_field("LOCUS\\s+(\\S+)")   # e.g. "AB704945"
+    organism  <- get_field("\\s+ORGANISM\\s+(.+?)\\n")
+    accession <- get_field("ACCESSION\\s+(\\S+)")
+    taxonomy  <- {
+      tax_block <- regmatches(rec,
+                              regexpr("(?<=\\n  ORGANISM  .{0,200}\\n)([\\s\\S]*?)(?=\\.\\nREFERENCE)",
+                                      rec, perl = TRUE))
+      if (length(tax_block) == 0) "" else
+        paste(trimws(unlist(strsplit(tax_block, "[;\n]"))), collapse = ";")
+    }
+    
+    data.frame(
+      label     = label,
+      organism  = organism,
+      accession = accession,
+      taxonomy  = taxonomy,
+      stringsAsFactors = FALSE
+    )
+  })
+  do.call(rbind, rows)
+}
+
